@@ -1,5 +1,6 @@
 from __future__ import annotations
-from typing import Any
+
+from typing import Any, Iterator
 
 
 class Product:
@@ -8,6 +9,20 @@ class Product:
         self.description = description
         self.__price = price
         self.quantity = quantity
+
+    def __str__(self) -> str:
+        """
+        Для строкового отображения объекта Product
+        """
+        return f"{self.name}, {self.price} руб. Остаток: {self.quantity} шт."
+
+    def __add__(self, other: Product) -> float:
+        """
+        Для подсчета общей стоимости двух продуктов
+        """
+        if isinstance(other, Product):
+            return self.price * self.quantity + other.price * other.quantity
+        return NotImplemented
 
     @property
     def price(self) -> float:
@@ -36,7 +51,7 @@ class Product:
             self.__price = value
 
     @classmethod
-    def new_product(cls, data: dict, existing_products: list|None = None) -> Any:
+    def new_product(cls, data: dict, existing_products: list | None = None) -> Any:
         """
         Создаёт новый продукт если товар с таким именем уже есть:
         увеличивает количество и оставляет более высокую цену
@@ -71,6 +86,19 @@ class Category:
 
         Category.category_count += 1  # Категории
 
+    def __str__(self) -> str:
+        """
+        Для строкового отображения объекта Category
+        """
+        total_quantity = sum(product.quantity for product in self.__products)
+        return f"{self.name}, количество продуктов: {total_quantity} шт."
+
+    def __iter__(self) -> Iterator:
+        """
+        Возвращает итератор для перебора продуктов.
+        """
+        return CategoryIterator(self)
+
     def add_product(self, product: Product) -> None:
         """
         Добавляет продукт и увеличивает счетчик
@@ -90,3 +118,30 @@ class Category:
         for product in self.__products:
             result.append(f"{product.name}, {product.price} руб. Остаток: {product.quantity} шт.")
         return "\n".join(result)
+
+    def _get_products(self) -> list[Product]:
+        """
+        Внутренний метод для доступа к списку продуктов.
+        Используется итератором.
+        """
+        return self.__products
+
+
+class CategoryIterator:
+    """
+    Итератор для перебора продуктов в категории.
+    """
+
+    def __init__(self, category: Category):
+        self._products = category._get_products()  # доступ к защищённому методу для итератора
+        self._index = 0
+
+    def __iter__(self) -> Iterator:
+        return self
+
+    def __next__(self) -> Product:
+        if self._index < len(self._products):
+            product = self._products[self._index]
+            self._index += 1
+            return product
+        raise StopIteration
