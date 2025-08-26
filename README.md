@@ -23,6 +23,10 @@
 - Класс `CategoryIterator` содержит:
   - итератор
 
+- Класс наследник `Smartphone(Product)`
+
+- Класс наследник `LawnGrass(Product)`
+
 ### Тесты
 
 Покрытие тестами 91%

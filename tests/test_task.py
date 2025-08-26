@@ -1,6 +1,7 @@
 from typing import Any
+import pytest
 
-from src.task import Category, Product
+from src.task import Category, Product, Smartphone, LawnGrass
 
 
 def test_add_product_in_category() -> None:
@@ -70,3 +71,48 @@ def test_category_iteration() -> None:
 
     names = [product.name for product in category]
     assert names == ["Телефон", "Планшет"]
+
+
+def test_add_wrong_type_product() -> None:
+    """
+    Проверяет, что в категорию нельзя добавить объект, не являющийся Product.
+    """
+    category = Category("Игрушки", "Категория с игрушками", [])
+
+    # Передаём строку вместо объекта Product специально
+    with pytest.raises(TypeError):
+        category.add_product("не продукт")  # type: ignore
+
+
+def test_add_product_accepts_valid_types() -> None:
+    cat = Category("Test", "Тестовая категория", [])
+
+    smartphone = Smartphone("iPhone", "desc", 1000.0, 2, 95.5, "14", 128, "black")
+    grass = LawnGrass("Grass", "desc", 500.0, 5, "Россия", "7 дней", "зелёный")
+    generic = Product("Мыло", "desc", 100.0, 10)
+
+    cat.add_product(smartphone)
+    cat.add_product(grass)
+    cat.add_product(generic)
+
+    assert Category.product_count >= 3
+
+
+def test_add_product_rejects_wrong_types() -> None:
+    cat = Category("Test", "Тестовая категория", [])
+
+    # Передаём строку вместо объекта Product должна возникнуть ошибка TypeError
+    with pytest.raises(TypeError):
+        cat.add_product("Не продукт")  # type: ignore
+
+    # Передаём целое число не является продуктом, ожидаем TypeError
+    with pytest.raises(TypeError):
+        cat.add_product(123)  # type: ignore
+
+    # Передаём список тоже недопустимый тип, проверяем защиту
+    with pytest.raises(TypeError):
+        cat.add_product(["список"])  # type: ignore
+
+    # Передаём None невалидный тип, должен быть вызван TypeError
+    with pytest.raises(TypeError):
+        cat.add_product(None)  # type: ignore

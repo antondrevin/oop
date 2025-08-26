@@ -10,19 +10,20 @@ class Product:
         self.__price = price
         self.quantity = quantity
 
+    def __add__(self, other: "Product") -> float:  # переделано
+        """
+        Складывает два объекта одного и того же класса (Product или его наследники)
+        """
+        if type(self) != type(other):
+            raise TypeError("Можно складывать только объекты одного типа")
+
+        return self.price * self.quantity + other.price * other.quantity
+
     def __str__(self) -> str:
         """
         Для строкового отображения объекта Product
         """
         return f"{self.name}, {self.price} руб. Остаток: {self.quantity} шт."
-
-    def __add__(self, other: Product) -> float:
-        """
-        Для подсчета общей стоимости двух продуктов
-        """
-        if isinstance(other, Product):
-            return self.price * self.quantity + other.price * other.quantity
-        return NotImplemented
 
     @property
     def price(self) -> float:
@@ -70,6 +71,25 @@ class Product:
                     return product  # Возвращаем обновлённый объект
 
         return cls(name, description, price, quantity)
+
+
+class Smartphone(Product):  # Подкласс от Product
+    def __init__(self, name: str, description: str, price: float, quantity: int,
+                 efficiency: float, model: str, memory: int, color: str):
+        super().__init__(name, description, price, quantity)
+        self.efficiency = efficiency
+        self.model = model
+        self.memory = memory
+        self.color = color
+
+
+class LawnGrass(Product):  # Подкласс от Product
+    def __init__(self, name: str, description: str, price: float, quantity: int,
+                 country: str, germination_period: str, color: str):
+        super().__init__(name, description, price, quantity)
+        self.country = country
+        self.germination_period = germination_period
+        self.color = color
 
 
 class Category:
