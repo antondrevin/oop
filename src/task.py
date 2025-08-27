@@ -1,10 +1,33 @@
 from __future__ import annotations
 
 from typing import Any, Iterator
+from abc import ABC, abstractmethod
 
 
-class Product:
+class BaseProduct(ABC):
+    @abstractmethod
+    def __str__(self) -> str:
+        ...
+
+    @property
+    @abstractmethod
+    def price(self) -> float:
+        ...
+
+    @price.setter
+    @abstractmethod
+    def price(self, value: float) -> None:
+        ...
+
+
+class LoggerMixin:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        print(f"Создан объект класса {self.__class__.__name__} с аргументами: {args}, {kwargs}")
+
+
+class Product(LoggerMixin, BaseProduct):
     def __init__(self, name: str, description: str, price: float, quantity: int):
+        super().__init__(name, description, price, quantity)
         self.name = name
         self.description = description
         self.__price = price
@@ -24,6 +47,9 @@ class Product:
         Для строкового отображения объекта Product
         """
         return f"{self.name}, {self.price} руб. Остаток: {self.quantity} шт."
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({self.name!r}, {self.description!r}, {self.price}, {self.quantity})"
 
     @property
     def price(self) -> float:
@@ -82,6 +108,10 @@ class Smartphone(Product):  # Подкласс от Product
         self.memory = memory
         self.color = color
 
+    def __str__(self) -> str:
+        base_info = super().__str__()
+        return f"{base_info} | Модель: {self.model}, Память: {self.memory}, Цвет: {self.color}"
+
 
 class LawnGrass(Product):  # Подкласс от Product
     def __init__(self, name: str, description: str, price: float, quantity: int,
@@ -90,6 +120,32 @@ class LawnGrass(Product):  # Подкласс от Product
         self.country = country
         self.germination_period = germination_period
         self.color = color
+
+    def __str__(self) -> str:
+        base_info = super().__str__()
+        return f"{base_info} | Период роста: {self.germination_period}, Страна: {self.country}"
+
+
+class AbstractCategory(ABC):
+    @abstractmethod
+    def __init__(self, name: str, description: str):
+        self.name = name
+        self.description = description
+
+
+class Order(AbstractCategory):
+    def __init__(self, product: Product, quantity: int):
+        super().__init__(product.name, product.description)
+        self.product = product
+        self.quantity = quantity
+        self.total_price = self.product.price * quantity
+
+    def __str__(self) -> str:
+        return f"Заказ: {self.product.name} x {self.quantity}, итого: {self.total_price} руб."
+
+    @property
+    def total(self) -> float:
+        return self.product.price * self.quantity
 
 
 class Category:
