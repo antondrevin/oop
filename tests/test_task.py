@@ -1,7 +1,9 @@
 from typing import Any
-import pytest
 
-from src.task import Category, Product, Smartphone, LawnGrass
+import pytest
+from _pytest.capture import CaptureFixture
+
+from src.task import Category, LawnGrass, Product, Smartphone
 
 
 def test_add_product_in_category() -> None:
@@ -116,3 +118,31 @@ def test_add_product_rejects_wrong_types() -> None:
     # Передаём None невалидный тип, должен быть вызван TypeError
     with pytest.raises(TypeError):
         cat.add_product(None)  # type: ignore
+
+
+def test_product_zero_quantity_exception() -> None:
+    with pytest.raises(ValueError):
+        Product("Ошибка", "Ноль", 100.0, 0)
+
+
+def test_category_middle_price_empty() -> None:
+    category = Category("Пустая", "Без товаров", [])
+    assert category.middle_price() == 0
+
+
+def test_add_zero_quantity_product_to_category(capsys:  CaptureFixture) -> None:
+    p = Product("Valid", "Описание", 100.0, 1)
+    category = Category("Категория", "Тест", [])
+
+    # Подготовим товар с quantity = 0 через обход ValueError
+    p_zero = object.__new__(Product)
+    p_zero.name = "Zero"
+    p_zero.description = "Ошибка"
+    p_zero._Product__price = 100.0  # type: ignore
+    p_zero.quantity = 0
+
+    category.add_product(p_zero)
+
+    captured = capsys.readouterr()
+    assert "Обработка добавления товара завершена." in captured.out
+    assert "Нельзя добавить товар с нулевым количеством" in captured.out

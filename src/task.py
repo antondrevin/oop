@@ -1,23 +1,24 @@
 from __future__ import annotations
 
-from typing import Any, Iterator
 from abc import ABC, abstractmethod
+from typing import Any, Iterator
+
+
+class InvalidQuantityException(Exception):
+    pass  # Исключение для добавления товара с 0
 
 
 class BaseProduct(ABC):
     @abstractmethod
-    def __str__(self) -> str:
-        ...
+    def __str__(self) -> str: ...
 
     @property
     @abstractmethod
-    def price(self) -> float:
-        ...
+    def price(self) -> float: ...
 
     @price.setter
     @abstractmethod
-    def price(self, value: float) -> None:
-        ...
+    def price(self, value: float) -> None: ...
 
 
 class LoggerMixin:
@@ -27,6 +28,10 @@ class LoggerMixin:
 
 class Product(LoggerMixin, BaseProduct):
     def __init__(self, name: str, description: str, price: float, quantity: int):
+
+        if quantity == 0:
+            raise ValueError("Товар с нулевым количеством не может быть добавлен")
+
         super().__init__(name, description, price, quantity)
         self.name = name
         self.description = description
@@ -100,8 +105,17 @@ class Product(LoggerMixin, BaseProduct):
 
 
 class Smartphone(Product):  # Подкласс от Product
-    def __init__(self, name: str, description: str, price: float, quantity: int,
-                 efficiency: float, model: str, memory: int, color: str):
+    def __init__(
+        self,
+        name: str,
+        description: str,
+        price: float,
+        quantity: int,
+        efficiency: float,
+        model: str,
+        memory: int,
+        color: str,
+    ):
         super().__init__(name, description, price, quantity)
         self.efficiency = efficiency
         self.model = model
@@ -114,8 +128,16 @@ class Smartphone(Product):  # Подкласс от Product
 
 
 class LawnGrass(Product):  # Подкласс от Product
-    def __init__(self, name: str, description: str, price: float, quantity: int,
-                 country: str, germination_period: str, color: str):
+    def __init__(
+        self,
+        name: str,
+        description: str,
+        price: float,
+        quantity: int,
+        country: str,
+        germination_period: str,
+        color: str,
+    ):
         super().__init__(name, description, price, quantity)
         self.country = country
         self.germination_period = germination_period
@@ -179,11 +201,22 @@ class Category:
         """
         Добавляет продукт и увеличивает счетчик
         """
-        if not isinstance(product, Product):  # ДОБАВЛЕНО: проверка на тип
-            raise TypeError("Можно добавить только объект класса Product или его наследника")
+        try:
+            if not isinstance(product, Product):  # ДОБАВЛЕНО: проверка на тип
+                raise TypeError("Можно добавить только объект класса Product или его наследника")
 
-        self.__products.append(product)
-        Category.product_count += 1
+            if product.quantity == 0:
+                raise InvalidQuantityException("Нельзя добавить товар с нулевым количеством в категорию")
+
+            self.__products.append(product)
+            Category.product_count += 1
+
+        except InvalidQuantityException as e:
+            print(e)
+        else:
+            print(f"Товар {product.name} успешно добавлен.")
+        finally:
+            print("Обработка добавления товара завершена.")
 
     @property
     def products(self) -> str:
@@ -194,6 +227,13 @@ class Category:
         for product in self.__products:
             result.append(f"{product.name}, {product.price} руб. Остаток: {product.quantity} шт.")
         return "\n".join(result)
+
+    def middle_price(self) -> Any:
+        try:
+            total = sum(p.price for p in self.__products)
+            return total / len(self.__products)
+        except ZeroDivisionError:
+            return 0
 
     def _get_products(self) -> list[Product]:
         """
